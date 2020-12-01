@@ -13,14 +13,14 @@ end
 defmodule Day1Part1 do
     def run() do
         input = Day1.input()
-        {a, b} = Enum.reduce(input, {0, 0}, fn num, {m1, m2} ->
-            if m1 != 0 do
-                {m1, m2}
-            else
-                case Enum.find(input, fn a -> a == (2020 - num) end) do
-                    nil -> {0, 0}
-                    a -> {num, a}
-                end 
+        not_found = {0, 0}
+        {a, b} = Enum.reduce(input, not_found, fn (num, {z, _} = output) ->
+            case z do
+                0 ->  case Enum.find(input, fn n -> n == (2020 - num) end) do
+                        nil -> not_found
+                        found -> {num, found}
+                    end
+                _ -> output
             end
         end)
         IO.inspect("#{a}, #{b}, #{a * b}")
@@ -30,21 +30,22 @@ end
 defmodule Day1Part2 do
     def run() do
         input = Day1.input()
-        {a, b, c} = Enum.reduce(input, {0, 0, 0}, fn num, {z, _, _} = global_out ->
+        not_found = {0, 0, 0}
+        {a, b, c} = Enum.reduce(input, not_found, fn num, {z, _, _} = global_output ->
             case z do
-                0 -> case Enum.filter(input, fn a -> a < (2020 - num) end) do
-                    [] -> {0, 0, 0}
-                    candidates -> Enum.reduce(candidates, {0, 0, 0}, fn c, {b, _, _} = partial_out ->
-                        case b do
-                            0 -> case Enum.find(candidates, fn cand -> num + c + cand == 2020 end) do
-                                nil -> {0, 0, 0}
-                                match -> {num, c, match}
+                0 -> case Enum.filter(input, fn n -> n < (2020 - num) end) do
+                    [] -> not_found
+                    rest -> Enum.reduce(rest, not_found, fn num2, {y, _, _} = partial_output ->
+                        case y do
+                            0 -> case Enum.find(rest, fn num3 -> num + num2 + num3 == 2020 end) do
+                                nil -> not_found
+                                match -> {num, num2, match}
                             end
-                            a -> partial_out
+                            _ -> partial_output
                         end
                     end)
                 end
-                a -> global_out
+                _ -> global_output
             end
         end)
         IO.inspect("#{a}, #{b}, #{c}, #{a * b * c}")
